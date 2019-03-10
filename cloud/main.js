@@ -1,4 +1,5 @@
 // Cloud Code entry point
+var security = require('./security/encryption')
 
 
 var encryptor = require('./security/encryption')

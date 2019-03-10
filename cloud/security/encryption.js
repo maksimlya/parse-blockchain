@@ -14,3 +14,5 @@ function GenerateKey(hash) {
         console.log(parseInt(mySha[i],16));
     }
 }
+
+exports.GenerateKey =  GenerateKey
