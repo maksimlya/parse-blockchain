@@ -46,3 +46,27 @@ Parse.Cloud.define('getGroups', async (request) => {
     else return new Parse.Error("No Groups exist....");
 });
 
+Parse.Cloud.define('createUser', async (request) => {
+    let hashString = request.params.username + request.params.password + request.params.city + request.params.age + request.params.origin + request.params.id + request.params.secret;
+    console.log(hashString);
+    let key = security.GenerateKey(hashString);
+    var user = new Parse.User();
+    user.set("username", request.params.username);
+    user.set("password", request.params.password);
+    //user.set("email", "email@example.com");
+
+// other fields can be set just like with Parse.Object
+    user.set("city", request.params.city);
+    user.set("age", request.params.age);
+    user.set("origin", request.params.origin);
+    user.set('pubKey', key.publicKey);
+    let groups = request.params.groups;
+    user.set("groups", request.params.groups);
+    try {
+        await user.signUp();
+        return "Success!";
+    } catch (error) {
+        // Show the error message somewhere and let the user try again.
+        return new Parse.Error("Error: " + error.code + " " + error.message);
+    }
+});
