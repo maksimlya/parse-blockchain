@@ -1,5 +1,6 @@
 // Cloud Code entry point
 var security = require('./security/encryption');
+const axios = require("axios");
 
 Parse.Cloud.define("createPoll", async  (request) => {
    let a = security.GenerateKey('Mirthrttttttttttttttttttteyerthrhrthrhtca');
@@ -69,4 +70,48 @@ Parse.Cloud.define('createUser', async (request) => {
         // Show the error message somewhere and let the user try again.
         return new Parse.Error("Error: " + error.code + " " + error.message);
     }
+});
+
+Parse.Cloud.define('sendVote', async (request) => {
+    let hashString = request.params.username + request.params.password + request.params.city + request.params.age + request.params.origin + request.params.id + request.params.secret;
+    let key = security.GenerateKey(hashString);
+    let pubKey = key.publicKey;
+    let url = 'http://localhost:8080/newTransaction';
+    let data = {
+        "From": pubKey ,
+        "To": request.params.voteTarget,
+        "Amount": 1,
+        "Tag" : request.params.tag
+    };
+    let log = await axios({
+        method: 'post',
+        url: url,
+        data: data
+    });
+    let signature = await security.sign(key.privKey,log.data.TxHash);
+
+    url = 'http://localhost:8080/addTransaction';
+    data = {
+        "TxHash": log.data.TxHash,
+        "Signature": signature
+    };
+
+    let result = await axios({
+        method: 'post',
+        url: url,
+        data: data
+    });
+     console.log(result.data.TxHash);
+    // console.log(key.publicKey);
+    // console.log(log.data.TxHash);
+    //
+    // console.log(security.verifySignature(key.publicKey,signature,log.data.TxHash));
+});
+
+Parse.Cloud.define('verifySignature', async (request) => {
+    let pubKey = request.params.pubKey;
+    let signature = request.params.signature;
+    let ckeckHash = request.params.hash;
+    let check = security.verifySignature(pubKey,signature,ckeckHash);
+    return check;
 });

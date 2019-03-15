@@ -1,6 +1,8 @@
 {
   "appId": "POLLS",
   "masterKey": "BLOCKCHAINPOLLS",
+  "restAPIKey": "BLOCKCHAIN",
+  "javascriptKey": "BLOCKCHAIN",
   "appName": "Blockchain Polls",
   "cloud": "./cloud/main",
   "databaseURI": "mongodb://127.0.0.1:27017/parse"
