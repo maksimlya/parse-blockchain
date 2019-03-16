@@ -49,7 +49,7 @@ Parse.Cloud.define('getGroups', async (request) => {
 
 Parse.Cloud.define('createUser', async (request) => {
     let hashString = request.params.username + request.params.password + request.params.city + request.params.age + request.params.origin + request.params.id + request.params.secret;
-    console.log(hashString);
+    //console.log(hashString);
     let key = security.GenerateKey(hashString);
     var user = new Parse.User();
     user.set("username", request.params.username);
@@ -88,6 +88,7 @@ Parse.Cloud.define('sendVote', async (request) => {
         url: url,
         data: data
     });
+   // let signature = await security.sign(key.privKey,log.data.TxHash);
     let signature = await security.sign(key.privKey,log.data.TxHash);
 
     url = 'http://localhost:8080/addTransaction';
@@ -101,8 +102,8 @@ Parse.Cloud.define('sendVote', async (request) => {
         url: url,
         data: data
     });
-     console.log(result.data.TxHash);
-    // console.log(key.publicKey);
+
+    // console.log(key.publicKey,key.privKey);
     // console.log(log.data.TxHash);
     //
     // console.log(security.verifySignature(key.publicKey,signature,log.data.TxHash));
@@ -112,6 +113,5 @@ Parse.Cloud.define('verifySignature', async (request) => {
     let pubKey = request.params.pubKey;
     let signature = request.params.signature;
     let ckeckHash = request.params.hash;
-    let check = security.verifySignature(pubKey,signature,ckeckHash);
-    return check;
+    return security.verifySignature(pubKey,signature,ckeckHash);
 });

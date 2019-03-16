@@ -2,38 +2,37 @@ var sha256 = require('js-sha256');
 var bigInt = require('big-integer');
 var base64js = require('js-base64').Base64;
 
+const expSize = 22;
+
+
 function sign(privKey, value){
-        let length = privKey.substr(11,2);
+    let length = privKey.substr(11,2);
 
-        let dValue = privKey.substr(13,length);
-        let nValue = [];
-        nValue.push(privKey.substr(0,10));
+    let dValue = privKey.substr(13,length);
+    let nValue = [];
+    nValue.push(privKey.substr(0,10));
 
-        nValue.push(privKey.substr(13+parseInt(length),privKey.length));
+    nValue.push(privKey.substr(13+parseInt(length),privKey.length));
 
-        let nFunc = nValue.join('');
+    let nFunc = nValue.join('');
 
-        let nNum = bigInt(nFunc,16);
-        let dNum = bigInt(dValue,16);
-
-        let arr=[];
-        for(let i=0; i<value.length; i++) {
-            arr.push(value.charCodeAt(i))
-        }
+    let nNum = bigInt(nFunc,16);
+    let dNum = bigInt(dValue,16);
 
 
-        let encrypted = [];
-
-        for(let i = 0 ; i < arr.length ; i++) {
-            encrypted.push(bigInt(arr[i]).modPow(dNum,nNum).toString(16));
-        }
-        encrypted = encrypted.join(',');
+    let newValue = bigInt(value,16);
 
 
-        // Returns Signature
-        return base64js.encode(encrypted);
+
+    let encrypted = newValue.modPow(dNum,nNum);
+
+
+    // Returns Signature
+    return base64js.encode(encrypted);
 
 }
+
+
 
 function decrypt(key, value){
 
@@ -51,22 +50,25 @@ function decrypt(key, value){
         let nNum = bigInt(nFunc,16);
         let eNum = bigInt(eValue,16);
 
-        let val = base64js.decode(value).split(',');
+        let val = base64js.decode(value);
 
 
 
-         let arr=[];
-         for(let i=0; i<val.length; i++) {
-             arr.push(bigInt(val[i],16));
-         }
+         // let arr=[];
+         // for(let i=0; i<val.length; i++) {
+         //     arr.push(bigInt(val[i],16));
+         // }
 
 
-         let decrypted = [];
+         let decrypted = bigInt(val);
 
-        for(let i = 0 ; i < arr.length ; i++) {
-            decrypted.push(String.fromCharCode(arr[i].modPow(eNum,nNum)));
-        }
-        return decrypted.join('');
+        // for(let i = 0 ; i < arr.length ; i++) {
+        //     decrypted.push(String.fromCharCode(arr[i].modPow(eNum,nNum)));
+        // }
+        // return decrypted.join('');
+
+        decrypted = decrypted.modPow(eNum,nNum);
+        return decrypted.toString(16);
 }
 
 
@@ -85,23 +87,25 @@ function verifySignature(pubKey, signature, message){
 
     let nNum = bigInt(nFunc,16);
     let eNum = bigInt(eValue,16);
-
-    let val = base64js.decode(signature).split(',');
-
+    let val = bigInt(base64js.decode(signature));
 
 
-    let arr=[];
-    for(let i=0; i<val.length; i++) {
-        arr.push(bigInt(val[i],16));
-    }
+
+    // let arr=[];
+    // for(let i=0; i<val.length; i++) {
+    //     arr.push(bigInt(val[i],16));
+    // }
 
 
-    let decrypted = [];
+    let decrypted = val.modPow(eNum,nNum);
+   // console.log(decrypted);
 
-    for(let i = 0 ; i < arr.length ; i++) {
-        decrypted.push(String.fromCharCode(arr[i].modPow(eNum,nNum)));
-    }
-    return decrypted.join('') === message;
+    // for(let i = 0 ; i < arr.length ; i++) {
+    //     decrypted.push(String.fromCharCode(arr[i].modPow(eNum,nNum)));
+    // }
+
+
+    return decrypted.toString(16) === message;
 }
 
 function GenerateKey(hash) {
@@ -114,7 +118,7 @@ function GenerateKey(hash) {
 
      for (let i = 0 ; i < mySha.length ; i ++) {
          let tmp = bigInt(mySha[i]);
-         let exp = bigInt(22);
+         let exp = bigInt(expSize);
 
          let lol = tmp.pow(exp);
          y = y.add(tmp.pow(exp));
@@ -156,6 +160,8 @@ function GenerateKey(hash) {
     let privateLength = d.toString(16).length;
 
     let pKey = [];
+
+    //console.log(d,e)
 
     pKey.push(nFunc.substr(0,10));
     pKey.push('g');
