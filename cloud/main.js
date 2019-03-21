@@ -2,8 +2,10 @@
 const security = require('./security/encryption');
 const axios = require("axios");
 
+
+
 Parse.Cloud.define("createPoll", async  () => {
-   let a = security.GenerateKey('Mirthrttttttttttttttttttteyerthrhrthrhtca');
+   let a = security.GenerateKey('Matttdwfafaaaaairthrttttttttttttttttttteyerthrhrthrhtca');
   //  let b = security.GenerateKey('Miiii');
    // let c = security.GenerateKey('totototo');
 
@@ -147,4 +149,9 @@ Parse.Cloud.define('verifySignature', async (request) => {
     let signature = request.params.signature;
     let ckeckHash = request.params.hash;
     return security.verifySignature(pubKey,signature,ckeckHash);
+});
+
+
+Parse.Cloud.define('testTest', async () => {
+    console.log('change made');
 });
