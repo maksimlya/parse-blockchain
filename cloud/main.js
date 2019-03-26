@@ -144,6 +144,28 @@ console.log(signature)
     // console.log(security.verifySignature(key.publicKey,signature,log.data.TxHash));
 });
 
+Parse.Cloud.define('saveCountry', async (request) => {
+
+    let url = 'https://restcountries.eu/rest/v2/all';
+    let log = await axios({
+        method: 'get',
+        url: url
+    });
+
+    // for(let country of Object.keys(log)){
+    //     console.log(country);
+    // }
+    let Countries = Parse.Object.extend("Countries");
+
+    log.data.map((country) => {
+        console.log(country.name);
+        let newCountry = new Countries();
+        newCountry.set('name',country.name);
+        newCountry.save();
+    })
+
+});
+
 Parse.Cloud.define('verifySignature', async (request) => {
     let pubKey = request.params.pubKey;
     let signature = request.params.signature;
@@ -155,3 +177,14 @@ Parse.Cloud.define('verifySignature', async (request) => {
 Parse.Cloud.define('testTest', async () => {
     console.log('change made');
 });
+
+
+// GetPollsForUser(pubKey) => all polls the user voted for
+// GetAvailablePollsForUser(pubKey) => get polls the user CAN vote in.
+
+// GetTransactionsForUser(pubKey) => Json {{PollName: "Name", From: "Sender", To: "Decision", TimeStamp: "Time"},{PollName: "Name", From: "Sender", To: "Decision", TimeStamp: "Time"}};
+
+// GetUsersByCity(pollTag, city, to) => amount
+// GetVotingPercentage(pollTag) => % of ppl that voted compared to amount of valid voters.
+// GetVotingPercentageByCities(pollTag) => {city1: %, city2: %,....}
+// GetVotingPercentageForCandidate(pollTag,city)
