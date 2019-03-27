@@ -2,18 +2,35 @@
 const security = require('./security/encryption');
 const axios = require("axios");
 
+const blockchainUrl = 'http://localhost:8080';
 
 
-Parse.Cloud.define("createPoll", async  () => {
-   let a = security.GenerateKey('Matttdwfafaaaaairthrttttttttttttttttttteyerthrhrthrhtca');
-  //  let b = security.GenerateKey('Miiii');
-   // let c = security.GenerateKey('totototo');
 
+Parse.Cloud.define("createPoll", async  (request) => {
+    let pollTag = request.params.pollTag;
+    let users = request.params.users;
+//    let a = security.GenerateKey('Matttdwfafaaaaairthrttttttttttttttttttteyerthrhrthrhtca');
+//   //  let b = security.GenerateKey('Miiii');
+//    // let c = security.GenerateKey('totototo');
+//
+// //
+//     let encrypted = security.sign(a.privKey, '0123hello');
+//
+//
+//     return security.verifySignature(a.publicKey,encrypted, '0123hello');
+    // TODO - Add other poll fields....
 
-    let encrypted = security.sign(a.privKey, '0123hello');
+    let url = blockchainUrl + '/generateTokens';
+    let data = {
+        "Tag": pollTag ,
+        "Voters": users
+    };
+    let log = await axios({
+        method: 'post',
+        url: url,
+        data: data
+    });
 
-
-    return security.verifySignature(a.publicKey,encrypted, '0123hello');
 
 });
 
@@ -90,6 +107,7 @@ Parse.Cloud.define('createUser', async (request) => {
     user.set('password', request.params.password);
     user.set('gender', request.params.gender);
     //user.set("email", "email@example.com");
+    ///
 
 // other fields can be set just like with Parse.Object
     user.set('city', request.params.city);
@@ -107,11 +125,11 @@ Parse.Cloud.define('createUser', async (request) => {
     }
 });
 
-Parse.Cloud.define('sendVote', async (request) => {
+Parse.Cloud.define('sendVote', async (request) => {         // TODO - Simplify
     let hashString = request.params.username + request.params.password + request.params.city + request.params.age + request.params.origin + request.params.id + request.params.secret;
     let key = security.GenerateKey(hashString);
     let pubKey = key.publicKey;
-    let url = 'http://localhost:8080/newTransaction';
+    let url = blockchainUrl + '/newTransaction';
     let data = {
         "From": pubKey ,
         "To": request.params.voteTarget,
@@ -126,7 +144,7 @@ Parse.Cloud.define('sendVote', async (request) => {
    // let signature = await security.sign(key.privKey,log.data.TxHash);
     let signature = await security.sign(key.privKey,log.data.TxHash);
 console.log(signature)
-    url = 'http://localhost:8080/addTransaction';
+    url = blockchainUrl + '/addTransaction';
     data = {
         "TxHash": log.data.TxHash,
         "Signature": signature
