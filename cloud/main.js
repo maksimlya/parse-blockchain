@@ -1,19 +1,26 @@
 // Cloud Code entry point
 const security = require('./security/encryption');
 const axios = require("axios");
+var sha256 = require('js-sha256');
 
 const blockchainUrl = 'http://localhost:8080';
+let keyPair = security.GenerateKey('ThisIsBallotNumber1');
+let myKey = '33b02183dba1d072dc7f337013b6bb191fb168b86971feb48f5b5ca3a7da1952c75558bea8b7d1bdf5396fcc7099';
 
 
 
 Parse.Cloud.define("createPoll", async  (request) => {
+    let sha = sha256.create();
+    sha.update(request.params.users.join(""));
+    let mySha = sha.hex();
+    console.log(mySha);
+    let signature = security.sign(keyPair.privKey, mySha);
+
+
     let pollTag = request.params.pollTag;
     let users = request.params.users;
-//    let a = security.GenerateKey('Matttdwfafaaaaairthrttttttttttttttttttteyerthrhrthrhtca');
-//   //  let b = security.GenerateKey('Miiii');
-//    // let c = security.GenerateKey('totototo');
-//
-// //
+    console.log(signature)
+
 //     let encrypted = security.sign(a.privKey, '0123hello');
 //
 //
@@ -23,7 +30,9 @@ Parse.Cloud.define("createPoll", async  (request) => {
     let url = blockchainUrl + '/generateTokens';
     let data = {
         "Tag": pollTag ,
-        "Voters": users
+        "Voters": users,
+        "Signature": signature
+
     };
     let log = await axios({
         method: 'post',
@@ -35,9 +44,9 @@ Parse.Cloud.define("createPoll", async  (request) => {
 });
 
 Parse.Cloud.define('createGroup', async (request) => {
-   let groupName = request.params.groupName;
-   const groups = Parse.Object.extend("Groups");
-   const query = new Parse.Query(groups);
+    let groupName = request.params.groupName;
+    const groups = Parse.Object.extend("Groups");
+    const query = new Parse.Query(groups);
 
     query.equalTo("name", groupName);
     const results = await query.find();
@@ -141,9 +150,9 @@ Parse.Cloud.define('sendVote', async (request) => {         // TODO - Simplify
         url: url,
         data: data
     });
-   // let signature = await security.sign(key.privKey,log.data.TxHash);
+    // let signature = await security.sign(key.privKey,log.data.TxHash);
     let signature = await security.sign(key.privKey,log.data.TxHash);
-console.log(signature)
+    console.log(signature)
     url = blockchainUrl + '/addTransaction';
     data = {
         "TxHash": log.data.TxHash,

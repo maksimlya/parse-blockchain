@@ -113,6 +113,7 @@ function GenerateKey(hash) {
     sha.update(hash);
     let mySha = sha.array();
 
+
     let y = bigInt(0);
     let one = bigInt(1);
 
