@@ -72,7 +72,7 @@ function decrypt(key, value){
 }
 
 
-function verifySignature(pubKey, signature, message){
+function verifySignature(pubKey, signature){
 
     let length = pubKey[11];
 
@@ -105,7 +105,7 @@ function verifySignature(pubKey, signature, message){
     // }
 
 
-    return decrypted.toString(16) === message;
+    return decrypted.toString(16);
 }
 
 function GenerateKey(hash) {

@@ -196,8 +196,8 @@ Parse.Cloud.define('saveCountry', async (request) => {
 Parse.Cloud.define('verifySignature', async (request) => {
     let pubKey = request.params.pubKey;
     let signature = request.params.signature;
-    let ckeckHash = request.params.hash;
-    return security.verifySignature(pubKey,signature,ckeckHash);
+    //let ckeckHash = request.params.hash;
+    return security.verifySignature(pubKey,signature);
 });
 
 
