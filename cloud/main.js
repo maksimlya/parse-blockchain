@@ -138,26 +138,26 @@ Parse.Cloud.define('sendVote', async (request) => {         // TODO - Simplify
     let hashString = request.params.username + request.params.password + request.params.city + request.params.age + request.params.origin + request.params.id + request.params.secret;
     let key = security.GenerateKey(hashString);
     let pubKey = key.publicKey;
-    let url = blockchainUrl + '/newTransaction';
+
+
+    let sha = sha256.create();
+    let timestamp = new Date().getTime();
+    sha.update(pubKey+request.params.voteTarget+1+request.params.tag + timestamp);
+    let txHash = sha.hex();
+
+
+    let signature = await security.sign(key.privKey, txHash);
+
+    let url = blockchainUrl + '/addTransaction';
     let data = {
-        "From": pubKey ,
-        "To": request.params.voteTarget,
+        "Sender": pubKey,
+        "Receiver": request.params.voteTarget,
         "Amount": 1,
-        "Tag" : request.params.tag
-    };
-    let log = await axios({
-        method: 'post',
-        url: url,
-        data: data
-    });
-    // let signature = await security.sign(key.privKey,log.data.TxHash);
-    let signature = await security.sign(key.privKey,log.data.TxHash);
-    console.log(signature)
-    url = blockchainUrl + '/addTransaction';
-    data = {
-        "TxHash": log.data.TxHash,
+        "Tag": request.params.tag,
+        "Timestamp": timestamp.toString(),
         "Signature": signature
     };
+
 
     let result = await axios({
         method: 'post',
@@ -165,10 +165,6 @@ Parse.Cloud.define('sendVote', async (request) => {         // TODO - Simplify
         data: data
     });
 
-    // console.log(key.publicKey,key.privKey);
-    // console.log(log.data.TxHash);
-    //
-    // console.log(security.verifySignature(key.publicKey,signature,log.data.TxHash));
 });
 
 Parse.Cloud.define('saveCountry', async (request) => {
