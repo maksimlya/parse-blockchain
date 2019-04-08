@@ -13,19 +13,12 @@ Parse.Cloud.define("createPoll", async  (request) => {
     let sha = sha256.create();
     sha.update(request.params.users.join(""));
     let mySha = sha.hex();
-    console.log(mySha);
-    let signature = security.sign(keyPair.privKey, mySha);
 
+    let signature = security.sign(keyPair.privKey, mySha);
 
     let pollTag = request.params.pollTag;
     let users = request.params.users;
-    console.log(signature)
 
-//     let encrypted = security.sign(a.privKey, '0123hello');
-//
-//
-//     return security.verifySignature(a.publicKey,encrypted, '0123hello');
-    // TODO - Add other poll fields....
 
     let url = blockchainUrl + '/generateTokens';
     let data = {
