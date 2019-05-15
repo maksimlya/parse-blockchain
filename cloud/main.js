@@ -141,6 +141,8 @@ Parse.Cloud.define('sendVote', async (request) => {         // TODO - Simplify
 
     let signature = await security.sign(key.privKey, txHash);
 
+
+
     let url = blockchainUrl + '/addTransaction';
     let data = {
         "Sender": pubKey,
@@ -190,9 +192,6 @@ Parse.Cloud.define('verifySignature', async (request) => {
 });
 
 
-Parse.Cloud.define('testTest', async () => {
-    console.log('change made');
-});
 
 
 // GetPollsForUser(pubKey) => all polls the user voted for
