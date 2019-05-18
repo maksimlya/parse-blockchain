@@ -10,14 +10,34 @@ let myKey = '33b02183dba1d072dc7f337013b6bb191fb168b86971feb48f5b5ca3a7da1952c75
 
 
 Parse.Cloud.define("createPoll", async  (request) => {
+    let pollTag = request.params.tag;
+    let polls = Parse.Object.extend('Polls');
+
+    let query = new Parse.Query(polls);
+
+    query.equalTo('pollTag',pollTag);
+
+    let result = await query.find();
+    console.log(result);
+    if(result.length > 0)
+        return 'Poll with same tag already exists... Aborting......';
+
+
+    let users = await getUsersByGroup(request.params.group);
+    console.log(users);
     let sha = sha256.create();
-    sha.update(request.params.users.join(""));
+    let ss = users.join(",");
+    sha.update(ss);
     let mySha = sha.hex();
+
+    console.log(ss);
 
     let signature = security.sign(keyPair.privKey, mySha);
 
-    let pollTag = request.params.pollTag;
-    let users = request.params.users;
+
+    let pollName = request.params.name;
+    let description = request.params.desc;
+    let choices = request.params.choices;
 
 
     let url = blockchainUrl + '/generateTokens';
@@ -34,7 +54,42 @@ Parse.Cloud.define("createPoll", async  (request) => {
     });
 
 
+
+    let poll = new polls();
+
+    poll.set('pollName',pollName);
+    poll.set('pollTag', pollTag);
+    poll.set('pollGroup', request.params.group);
+    poll.set('description', description);
+    poll.set('choices', choices);
+    poll.save();
+
+    return 'Poll was created successfully.';
+
 });
+
+
+
+// Parse.Cloud.define('getUsersByGroup', async(request) => {
+//     let grpName = request.params.group;
+//
+//     let users = Parse.Object.extend('User');
+//
+//     let pubKeys = [];
+//
+//     let query = new Parse.Query(users);
+//     console.log(grpName);
+//     query.containedIn('groups',[grpName]);
+//     let result = await query.find();
+//
+//     for( let i of result) {
+//         pubKeys.push(i.get('pubKey'));
+//     }
+//
+//     return pubKeys;
+//
+//
+// });
 
 Parse.Cloud.define('createGroup', async (request) => {
     let groupName = request.params.groupName;
@@ -99,21 +154,41 @@ Parse.Cloud.define('getGroups', async (request) => {
     else return new Parse.Error("No Groups exist....");
 });
 
+Parse.Cloud.define('getCities', async() => {
+    let citiesArr = [];
+    const cities = Parse.Object.extend('Cities');
+    const query = new Parse.Query(cities);
+
+    const results = await query.find();
+
+    if(results.length !== 0) {
+        for( let city of results){
+            let tmp = [];
+            tmp.push(city.get('Name'));
+            tmp.push(city.get('Region'));
+            citiesArr.push(tmp);
+        }
+        return citiesArr;
+    }
+});
+
 Parse.Cloud.define('createUser', async (request) => {
-    let hashString = request.params.username + request.params.password + request.params.city + request.params.age + request.params.origin + request.params.id + request.params.secret;
+
+    let hashString = request.params.username + request.params.password + request.params.city + request.params.age + request.params.gender + request.params.origin + request.params.secret;
     console.log(hashString);
     let key = security.GenerateKey(hashString);
     console.log(key)
     var user = new Parse.User();
     user.set('username', request.params.username);
     user.set('password', request.params.password);
-    user.set('gender', request.params.gender);
+   // user.set('gender', request.params.gender);
     //user.set("email", "email@example.com");
     ///
 
 // other fields can be set just like with Parse.Object
     user.set('city', request.params.city);
     user.set('age', request.params.age);
+    user.set('gender', request.params.gender)
     user.set('origin', request.params.origin);
     user.set('pubKey', key.publicKey);
     let groups = request.params.groups;
@@ -128,7 +203,7 @@ Parse.Cloud.define('createUser', async (request) => {
 });
 
 Parse.Cloud.define('sendVote', async (request) => {         // TODO - Simplify
-    let hashString = request.params.username + request.params.password + request.params.city + request.params.age + request.params.origin + request.params.id + request.params.secret;
+    let hashString = request.params.username + request.params.password + request.params.city + request.params.age + request.params.gender + request.params.origin + request.params.secret;
     let key = security.GenerateKey(hashString);
     let pubKey = key.publicKey;
 
@@ -160,29 +235,31 @@ Parse.Cloud.define('sendVote', async (request) => {         // TODO - Simplify
         data: data
     });
 
-});
-
-Parse.Cloud.define('saveCountry', async (request) => {
-
-    let url = 'https://restcountries.eu/rest/v2/all';
-    let log = await axios({
-        method: 'get',
-        url: url
-    });
-
-    // for(let country of Object.keys(log)){
-    //     console.log(country);
-    // }
-    let Countries = Parse.Object.extend("Countries");
-
-    log.data.map((country) => {
-        console.log(country.name);
-        let newCountry = new Countries();
-        newCountry.set('name',country.name);
-        newCountry.save();
-    })
+    return result.data;
 
 });
+
+// Parse.Cloud.define('saveCountry', async (request) => {
+//
+//     let url = 'https://restcountries.eu/rest/v2/all';
+//     let log = await axios({
+//         method: 'get',
+//         url: url
+//     });
+//
+//     // for(let country of Object.keys(log)){
+//     //     console.log(country);
+//     // }
+//     let Countries = Parse.Object.extend("Countries");
+//
+//     log.data.map((country) => {
+//         console.log(country.name);
+//         let newCountry = new Countries();
+//         newCountry.set('name',country.name);
+//         newCountry.save();
+//     })
+//
+// });
 
 Parse.Cloud.define('verifySignature', async (request) => {
     let pubKey = request.params.pubKey;
@@ -190,6 +267,31 @@ Parse.Cloud.define('verifySignature', async (request) => {
     //let ckeckHash = request.params.hash;
     return security.verifySignature(pubKey,signature);
 });
+
+
+
+
+
+
+
+async function getUsersByGroup(grpName) {
+
+
+    let users = Parse.Object.extend('User');
+
+    let pubKeys = [];
+
+    let query = new Parse.Query(users);
+    console.log(grpName);
+    query.containedIn('groups', [grpName]);
+    let result = await query.find();
+
+    for (let i of result) {
+        pubKeys.push(i.get('pubKey'));
+    }
+
+    return pubKeys;
+}
 
 
 
