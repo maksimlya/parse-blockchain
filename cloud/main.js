@@ -119,7 +119,7 @@ Parse.Cloud.define('getUsers', async() => {
         us = {username: user.get('username'), birthday: user.get('birthday'), gender: user.get('gender'),religion: user.get('religion'), country: user.get('country'),  city: user.get('city')};
         users.push(us);
     }
-
+    console.log(users);
    return users;
 });
 
