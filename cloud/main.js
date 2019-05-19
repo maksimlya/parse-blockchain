@@ -108,6 +108,21 @@ Parse.Cloud.define('createGroup', async (request) => {
     else return new Parse.Error("Group already exists..");
 });
 
+Parse.Cloud.define('getUsers', async() => {
+    let users = [];
+    const getter = Parse.Object.extend('User');
+    let query = new Parse.Query(getter);
+    let res = await query.find();
+
+    for (user of res){
+        let us;
+        us = {username: user.get('username'), birthday: user.get('birthday'), gender: user.get('gender'),religion: user.get('religion'), country: user.get('country'),  city: user.get('city')};
+        users.push(us);
+    }
+
+   return users;
+});
+
 Parse.Cloud.define('getSortedUsers', async (request) => {
     let users = [];
     const getter = Parse.Object.extend("User");
@@ -270,8 +285,36 @@ Parse.Cloud.define('verifySignature', async (request) => {
 
 
 
+Parse.Cloud.define('getResults', async(request) => {
+    let pollTag = request.params.pollTag;
+
+    let pollChoices = await getPollChoices(pollTag);
+
+    let url = blockchainUrl + '/getResults';
+    let data = {
+        "PollTag": pollTag,
+        "Choices": pollChoices
+    };
 
 
+    let result = await axios({
+        method: 'post',
+        url: url,
+        data: data
+    });
+
+    return result.data;
+});
+
+
+async function getPollChoices(pollTag) {
+    let polls = Parse.Object.extend('Polls');
+    let query = new Parse.Query(polls);
+    query.equalTo('pollTag',pollTag);
+    let res = await query.find();
+    return res[0].get('choices');
+
+}
 
 
 async function getUsersByGroup(grpName) {
