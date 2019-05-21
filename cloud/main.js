@@ -11,6 +11,8 @@ let myKey = '33b02183dba1d072dc7f337013b6bb191fb168b86971feb48f5b5ca3a7da1952c75
 
 Parse.Cloud.define("createPoll", async  (request) => {
     let pollTag = request.params.tag;
+    let user = request.user.get('username');
+
     let polls = Parse.Object.extend('Polls');
 
     let query = new Parse.Query(polls);
@@ -47,7 +49,7 @@ Parse.Cloud.define("createPoll", async  (request) => {
         "Signature": signature
 
     };
-    let log = await axios({
+    let log = await axios({  // TODO - veify poll creation on blockchain.
         method: 'post',
         url: url,
         data: data
@@ -58,6 +60,7 @@ Parse.Cloud.define("createPoll", async  (request) => {
     let poll = new polls();
 
     poll.set('pollName',pollName);
+    poll.set('creator',user);
     poll.set('pollTag', pollTag);
     poll.set('pollGroup', request.params.group);
     poll.set('description', description);
@@ -189,28 +192,23 @@ Parse.Cloud.define('getCities', async() => {
 
 Parse.Cloud.define('createUser', async (request) => {
 
-    let hashString = request.params.username + request.params.password + request.params.city + request.params.age + request.params.gender + request.params.origin + request.params.secret;
+    let hashString = request.params.username + request.params.password + request.params.city + request.params.birthDate + request.params.gender + request.params.country + request.params.religion + request.params.secret;
     console.log(hashString);
     let key = security.GenerateKey(hashString);
     console.log(key)
     var user = new Parse.User();
     user.set('username', request.params.username);
     user.set('password', request.params.password);
-   // user.set('gender', request.params.gender);
-    //user.set("email", "email@example.com");
-    ///
 
-// other fields can be set just like with Parse.Object
     user.set('city', request.params.city);
-    user.set('age', request.params.age);
-    user.set('gender', request.params.gender)
-    user.set('origin', request.params.origin);
+    user.set('birthDate', request.params.birthDate);
+    user.set('gender', request.params.gender);
+    user.set('country', request.params.country);
+    user.set('religion', request.params.religion);
     user.set('pubKey', key.publicKey);
-    let groups = request.params.groups;
     user.set('groups', request.params.groups);
     try {
-        await user.signUp();
-        return 'Success!';
+        return await user.signUp();
     } catch (error) {
         // Show the error message somewhere and let the user try again.
         return new Parse.Error('Error: ' + error.code + " " + error.message);
@@ -218,7 +216,7 @@ Parse.Cloud.define('createUser', async (request) => {
 });
 
 Parse.Cloud.define('sendVote', async (request) => {         // TODO - Simplify
-    let hashString = request.params.username + request.params.password + request.params.city + request.params.age + request.params.gender + request.params.origin + request.params.secret;
+    let hashString = request.params.username + request.params.password + request.params.city + request.params.birthDate + request.params.gender + request.params.country + request.params.religion + request.params.secret;
     let key = security.GenerateKey(hashString);
     let pubKey = key.publicKey;
 
@@ -303,7 +301,34 @@ Parse.Cloud.define('getResults', async(request) => {
         data: data
     });
 
+    console.log(result);
+
     return result.data;
+});
+
+Parse.Cloud.define('getAllResults', async(request) => {
+
+    let polls = Parse.Object.extend('Polls');
+    let query = new Parse.Query(polls);
+    let res = await query.find();
+
+
+
+
+    let allPollsData = [];
+    for (let poll of res){
+
+        let params = {pollTag: poll.get('pollTag')};
+        console.log(params);
+        let tmpResult = await Parse.Cloud.run('getResults',params);
+
+        let tmpData = {name: poll.get('pollName'), description: poll.get('description'),choices: poll.get('choices'), creator: poll.get('creator'), results: tmpResult}
+
+
+        allPollsData.push(tmpData);
+    }
+
+    return allPollsData;
 });
 
 
