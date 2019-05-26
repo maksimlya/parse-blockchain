@@ -156,6 +156,7 @@ Parse.Cloud.define('getSortedUsers', async (request) => {
 
 });
 
+
 Parse.Cloud.define('getGroups', async (request) => {
     let groupsArr = [];
     const groups = Parse.Object.extend("Groups");
@@ -181,13 +182,26 @@ Parse.Cloud.define('getCities', async() => {
 
     if(results.length !== 0) {
         for( let city of results){
-            let tmp = [];
-            tmp.push(city.get('Name'));
-            tmp.push(city.get('Region'));
-            citiesArr.push(tmp);
+            // let tmp = [];
+            // tmp.push(city.get('Name'));
+            // tmp.push(city.get('Region'));
+            citiesArr.push(city.get('Name'));
         }
         return citiesArr;
     }
+});
+
+Parse.Cloud.define('getCountries', async(request) => {
+    let countriesArr = [];
+    let countries = Parse.Object.extend('Countries');
+    let query = new Parse.Query(countries);
+
+    let res = await query.find();
+    res.map(name => {
+        countriesArr.push(name.get('name'));
+    });
+
+    return countriesArr;
 });
 
 Parse.Cloud.define('createUser', async (request) => {
@@ -220,6 +234,8 @@ Parse.Cloud.define('sendVote', async (request) => {         // TODO - Simplify
     let key = security.GenerateKey(hashString);
     let pubKey = key.publicKey;
 
+    if(request.params.pubKey !== pubKey)
+        return "Failed to vote - Wrong params....";
 
     let sha = sha256.create();
     let timestamp = new Date().getTime();
@@ -248,7 +264,9 @@ Parse.Cloud.define('sendVote', async (request) => {         // TODO - Simplify
         data: data
     });
 
-    return result.data;
+    console.log(result)
+
+    return "Success";
 
 });
 
@@ -285,13 +303,15 @@ Parse.Cloud.define('verifySignature', async (request) => {
 
 Parse.Cloud.define('getResults', async(request) => {
     let pollTag = request.params.pollTag;
+    let user = request.params.pubKey;
 
     let pollChoices = await getPollChoices(pollTag);
 
     let url = blockchainUrl + '/getResults';
     let data = {
         "PollTag": pollTag,
-        "Choices": pollChoices
+        "Choices": pollChoices,
+        "User": user
     };
 
 
@@ -306,6 +326,19 @@ Parse.Cloud.define('getResults', async(request) => {
     return result.data;
 });
 
+Parse.Cloud.define('getMyPolls', async (request) => {
+   let myPolls = [];
+   let userGroups = request.user.get('groups');
+   let params = {pubKey: request.user.get('pubKey')};
+   let allPolls = await Parse.Cloud.run('getAllResults',params);
+
+   for (let poll of allPolls){
+       if(userGroups.includes(poll.group))
+           myPolls.push(poll);
+   }
+   return myPolls;
+});
+
 Parse.Cloud.define('getAllResults', async(request) => {
 
     let polls = Parse.Object.extend('Polls');
@@ -318,17 +351,40 @@ Parse.Cloud.define('getAllResults', async(request) => {
     let allPollsData = [];
     for (let poll of res){
 
-        let params = {pollTag: poll.get('pollTag')};
+        let params = {pollTag: poll.get('pollTag'), pubKey: request.params.pubKey};
         console.log(params);
         let tmpResult = await Parse.Cloud.run('getResults',params);
 
-        let tmpData = {name: poll.get('pollName'), description: poll.get('description'),choices: poll.get('choices'), creator: poll.get('creator'), results: tmpResult}
+        let tmpData = {tag: poll.get('pollTag'), name: poll.get('pollName'), description: poll.get('description'),choices: poll.get('choices'), creator: poll.get('creator'), results: tmpResult, group: poll.get('pollGroup')};
 
 
         allPollsData.push(tmpData);
     }
-
+    console.log(allPollsData);
     return allPollsData;
+});
+
+Parse.Cloud.define('getBalance', async (request) => {
+    let pollTag = request.params.pollTag;
+    let sender = request.params.sender;
+
+
+    let url = blockchainUrl + '/getBalance';
+    let data = {
+        "Tag": pollTag,
+        "Sender": sender
+    };
+
+
+    let result = await axios({
+        method: 'get',
+        url: url,
+        data: data
+    });
+
+    console.log(result);
+
+    return result.data;
 });
 
 
