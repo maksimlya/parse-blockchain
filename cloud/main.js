@@ -10,6 +10,8 @@ let myKey = '33b02183dba1d072dc7f337013b6bb191fb168b86971feb48f5b5ca3a7da1952c75
 
 
 Parse.Cloud.define("createPoll", async  (request) => {
+
+
     let pollTag = request.params.tag;
     let user = request.user.get('username');
 
@@ -66,6 +68,7 @@ Parse.Cloud.define("createPoll", async  (request) => {
         let desc = new choiceDescriptions();
         desc.set('choice',choice.name);
         desc.set('description',choice.description);
+        desc.set('image',choice.img);
         desc.save();
         choiceNames.push(choice.name);
     }
