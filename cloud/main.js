@@ -14,6 +14,7 @@ Parse.Cloud.define("createPoll", async  (request) => {
     let user = request.user.get('username');
 
     let polls = Parse.Object.extend('Polls');
+    let choiceDescriptions = Parse.Object.extend('ChoiceDescriptions');
 
     let query = new Parse.Query(polls);
 
@@ -59,12 +60,22 @@ Parse.Cloud.define("createPoll", async  (request) => {
 
     let poll = new polls();
 
+    let choiceNames = []
+
+    for(let choice of choices){
+        let desc = new choiceDescriptions();
+        desc.set('choice',choice.name);
+        desc.set('description',choice.description);
+        desc.save();
+        choiceNames.push(choice.name);
+    }
+
     poll.set('pollName',pollName);
     poll.set('creator',user);
     poll.set('pollTag', pollTag);
     poll.set('pollGroup', request.params.group);
     poll.set('description', description);
-    poll.set('choices', choices);
+    poll.set('choices', choiceNames);
     poll.save();
 
     return 'Poll was created successfully.';
