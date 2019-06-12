@@ -371,11 +371,9 @@ Parse.Cloud.define('hash',async(request) => {
 
 Parse.Cloud.define('genKeyPair',async(request) => {
     let target = request.params.target;
-    let sha = sha256.create();
-    sha.update(target);
 
 
-    return sha.hex();
+    return security.GenerateKey(target);
 });
 
 // Parse.Cloud.define('saveCountry', async (request) => {
