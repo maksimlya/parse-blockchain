@@ -13,6 +13,8 @@ Parse.Cloud.define("createPoll", async  (request) => {
 
 
     let pollTag = request.params.tag;
+
+
     let user = request.user.get('username');
 
     let polls = Parse.Object.extend('Polls');
@@ -84,6 +86,79 @@ Parse.Cloud.define("createPoll", async  (request) => {
     return 'Poll was created successfully.';
 
 });
+
+
+Parse.Cloud.define('largeBlock', async (request) => {
+    let pollTag = request.params.tag;
+
+    let user = request.user.get('username');
+
+    let polls = Parse.Object.extend('Polls');
+
+    let query = new Parse.Query(polls);
+
+    query.equalTo('pollTag',pollTag);
+
+    let result = await query.find();
+    console.log(result);
+    if(result.length > 0)
+        return 'Poll with same tag already exists... Aborting......';
+
+
+    let users = await getUsersByGroup(request.params.group);
+    users = users.concat(users)
+    users = users.concat(users)
+    users = users.concat(users)
+    users = users.concat(users)
+    users = users.concat(users)
+    users = users.concat(users)
+    users = users.concat(users)
+    users = users.concat(users)
+    users = users.concat(users)
+    users = users.concat(users)
+    console.log(users);
+    let sha = sha256.create();
+    let ss = users.join(",");
+    sha.update(ss);
+    let mySha = sha.hex();
+
+    console.log(ss);
+
+    let signature = security.sign(keyPair.privKey, mySha);
+
+
+    let pollName = request.params.name;
+    let description = request.params.desc;
+    let choices = request.params.choices;
+
+
+    let url = blockchainUrl + '/generateTokens';
+    let data = {
+        "Tag": pollTag ,
+        "Voters": users,
+        "Signature": signature
+
+    };
+    let log = await axios({  // TODO - veify poll creation on blockchain.
+        method: 'post',
+        url: url,
+        data: data
+    });
+
+
+
+    let poll = new polls();
+
+    poll.set('pollName',pollName);
+    poll.set('creator',user);
+    poll.set('pollTag', pollTag);
+    poll.set('pollGroup', request.params.group);
+    poll.set('description', description);
+    poll.set('choices', choices);
+    poll.save();
+
+    return 'Poll was created successfully.';
+})
 
 
 
@@ -285,6 +360,24 @@ Parse.Cloud.define('sendVote', async (request) => {         // TODO - Simplify
 
 });
 
+Parse.Cloud.define('hash',async(request) => {
+   let target = request.params.target;
+    let sha = sha256.create();
+    sha.update(target);
+
+
+    return sha.hex();;
+});
+
+Parse.Cloud.define('genKeyPair',async(request) => {
+    let target = request.params.target;
+    let sha = sha256.create();
+    sha.update(target);
+
+
+    return sha.hex();
+});
+
 // Parse.Cloud.define('saveCountry', async (request) => {
 //
 //     let url = 'https://restcountries.eu/rest/v2/all';
@@ -347,9 +440,20 @@ Parse.Cloud.define('getMyPolls', async (request) => {
    let allPolls = await Parse.Cloud.run('getAllResults',params);
 
    for (let poll of allPolls){
-       if(userGroups.includes(poll.group))
+       if(userGroups.includes(poll.group)) {
+            if(poll.results.VoteBalance === 0){
+                for(let i in poll.choices){
+                    if(poll.choices[i] === poll.results.VoteTarget)
+                        poll.results.VoteTarget = parseInt(i);
+                }
+            }
+
+
            myPolls.push(poll);
-   }
+
+
+       }
+              }
    return myPolls;
 });
 
