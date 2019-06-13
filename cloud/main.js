@@ -376,6 +376,14 @@ Parse.Cloud.define('genKeyPair',async(request) => {
     return security.GenerateKey(target);
 });
 
+Parse.Cloud.define('sign', async (request) => {
+    return security.sign(request.params.privKey,request.params.hash);
+});
+
+Parse.Cloud.define('verify', async (request) => {
+   return security.verifySignature(request.params.pubKey, request.params.signature);
+});
+
 // Parse.Cloud.define('saveCountry', async (request) => {
 //
 //     let url = 'https://restcountries.eu/rest/v2/all';
@@ -515,6 +523,8 @@ Parse.Cloud.define('getBalance', async (request) => {
 
     return result.data;
 });
+
+
 
 
 
