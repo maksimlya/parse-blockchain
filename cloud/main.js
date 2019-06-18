@@ -3,7 +3,9 @@ const security = require('./security/encryption');
 const axios = require("axios");
 var sha256 = require('js-sha256');
 
-const blockchainUrl = 'http://localhost:8080';
+const blockchainUrl = 'https://blockchain-layer.herokuapp.com/';
+
+
 let keyPair = security.GenerateKey('ThisIsBallotNumber1');
 let myKey = '33b02183dba1d072dc7f337013b6bb191fb168b86971feb48f5b5ca3a7da1952c75558bea8b7d1bdf5396fcc7099';
 

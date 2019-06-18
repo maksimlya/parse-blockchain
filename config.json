@@ -6,7 +6,7 @@
   "javascriptKey": "BLOCKCHAIN",
   "appName": "Blockchain Polls",
   "cloud": "./cloud/main",
-  "databaseURI": "mongodb://127.0.0.1:27017/parse"
+  "databaseURI": "mongodb://<Admin>:<q1w2e3r4>@ds239157.mlab.com:39157/heroku_b8p7pl4m"
   
 
 
