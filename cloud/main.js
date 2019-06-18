@@ -136,7 +136,7 @@ Parse.Cloud.define('largeBlock', async (request) => {
     let choices = request.params.choices;
 
 
-    let url = blockchainUrl + '/generateTokens';
+    let url = blockchainUrl + 'generateTokens';
     let data = {
         "Tag": pollTag ,
         "Voters": users,
@@ -341,7 +341,7 @@ Parse.Cloud.define('sendVote', async (request) => {         // TODO - Simplify
 
 
 
-    let url = blockchainUrl + '/addTransaction';
+    let url = blockchainUrl + 'addTransaction';
     let data = {
         "Sender": pubKey,
         "Receiver": request.params.voteTarget,
@@ -425,7 +425,7 @@ Parse.Cloud.define('getResults', async(request) => {
 
     let pollChoices = await getPollChoices(pollTag);
 
-    let url = blockchainUrl + '/getResults';
+    let url = blockchainUrl + 'getResults';
     let data = {
         "PollTag": pollTag,
         "Choices": pollChoices,
@@ -510,7 +510,7 @@ Parse.Cloud.define('getBalance', async (request) => {
     let sender = request.user.get('pubKey');
 
 
-    let url = blockchainUrl + '/getBalance';
+    let url = blockchainUrl + 'getBalance';
     let data = {
         "Tag": pollTag,
         "Sender": sender
