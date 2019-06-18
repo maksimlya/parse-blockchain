@@ -56,6 +56,7 @@ Parse.Cloud.define("createPoll", async  (request) => {
         "Signature": signature
 
     };
+     console.log('BEFORE AXIOS============');
     let log = await axios({  // TODO - veify poll creation on blockchain.
         method: 'post',
         url: url,
