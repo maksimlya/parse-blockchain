@@ -49,7 +49,7 @@ Parse.Cloud.define("createPoll", async  (request) => {
     let choices = request.params.choices;
 
 
-    let url = blockchainUrl + '/generateTokens';
+    let url = blockchainUrl + 'generateTokens';
     let data = {
         "Tag": pollTag ,
         "Voters": users,
