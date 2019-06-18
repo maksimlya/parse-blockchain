@@ -62,7 +62,8 @@ Parse.Cloud.define("createPoll", async  (request) => {
         data: data
     });
 
-
+    console.log('AFTER AXIOS============');
+    console.log(log);
 
     let poll = new polls();
 
